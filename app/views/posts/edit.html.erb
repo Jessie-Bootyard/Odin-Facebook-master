@@ -1,0 +1,14 @@
+<div class="posts-edit">
+
+  <div class = "new-post">
+    <div class="new-post-top">
+        <span>Updating this post</span>
+    </div>
+    <%= form_for(@post, html: {multipart: true}) do |f| %>
+      <%= f.text_area :content, rows: "3" %><br/>
+      <div class="edit_center">
+        <%= f.submit "Update" %>
+      </div>
+    <% end %>
+  </div>
+</div>

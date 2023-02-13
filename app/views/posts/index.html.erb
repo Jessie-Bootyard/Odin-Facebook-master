@@ -1,0 +1,173 @@
+  <div class="posts_wrap">
+    <div class="posts">
+    <div class = "new_post">
+
+      <div class="new_post_top">
+        <h3>Create Post</span>
+      </div>
+
+      <%= form_for(@post, html: {multipart: true}) do |f| %>
+
+        <%= link_to(current_user.profile) do %>
+    
+        <% end %>
+        <div class="post_box">
+          <%= f.text_area :content, rows: "3", 
+          placeholder: "What's on your mind, #{current_user.first_name}?" %><br/>
+
+<%
+=begin%>
+<%= f.file_field :image, class: 'post-photo' %><br/> 
+<%
+=end%>
+          <%= f.submit "Post" %>
+        </div>
+      <% end %>
+
+
+      <% if flash[:post_success] %>
+        <div class="flash post-success"><%= flash[:post_success] %></div>
+      <% elsif flash[:post_failure] %>
+        <div class="flash post-failure"><%= flash[:post_failure] %></div>
+      <% end %>
+    </div>
+
+
+        <% @posts.each do |post| %>
+            <div class="post_content">
+
+                  <div class="post_header">
+
+                    <span class="profile_icon">
+
+                      <%= link_to(post.user.profile) do %>
+                        <%= image_tag post.user.profile, class: 'tac-image' %>
+                      <% end %>
+
+                        <span class="post_info">
+                          <%= link_to "#{post.user.first_name}", post.user.profile, class: "user_name" %>
+                          <%= link_to distance_of_time_in_words(Time.now, post.created_at)+ ' ago', post, class: 'timestamp' %>
+                        </span>
+                    </span>
+
+                    <% if current_user.id == post.user_id %>
+                      <span class="edit_delete_post">
+                        <%= link_to 'Edit', edit_post_path(post) %>
+                        <%= link_to 'Delete', post, method: :delete, data: {confirm: "Are you sure?"} %>
+                      </span>
+                    <% end %>
+
+                  </div>
+
+                  <p class="post_content_box">
+                    <%= post.content %><br/>
+                  </p>
+
+                <div class="like_comment_buttons">
+                    <div class="like_btn">
+                      <% like = post.likes.where("user_id = ?", current_user.id) %>
+                      <% if like.empty? %>
+                      <%= button_to likes_path(like: {post_id: post.id} ), method: :post, class: "like_button" do %>
+                        <%= fa_icon('thumbs-up', type: :regular, text: "Like") %>
+                      <% end %>
+                      <% else %>
+                        <%= button_to like.first, method: :delete, class: "like_button unlike" do %>
+                          <%= fa_icon('thumbs-up', type: :solid, color: '#1877F2', text: "Liked") %>
+                        <% end %>
+                      <% end %>
+                    </div>
+
+                    <div class="comment_btn">
+                      <button class="comment_button"><i class="far fa-comment-alt"></i> Comment</button>
+                    </div>
+                  </div>
+
+                  <% if post.likes.count > 0 %>
+
+                    <div class="liked_by">
+                      <%= fa_icon('thumbs-up', type: :solid, style: 'color:#1877F2') %>
+                      <% case post.likes.count %>
+                      <% when 1 %>
+                          <% user = User.find(post.likes.first.user_id) %>
+                          <strong>
+                            <%= link_to "#{user.first_name} #{user.last_name}", user.profile, class: "user-name" %>
+                          </strong>
+                      <% when 2 %>
+
+                        <% post.likes.each_with_index do |like, index| %>
+                          <% user = User.find(like.user_id) %>
+                          <strong>
+                            <% unless index == post.likes.count - 1 %>
+                              <%= link_to "#{user.first_name} #{user.last_name}", user.profile, class: "user-name" %> and
+                            <% else %>
+                              <%= link_to "#{user.first_name} #{user.last_name}", user.profile, class: "user-name" %>
+                            <% end %>
+                          </strong>
+
+                        <% end %>
+
+                      <% else %>
+                        <% user1 = User.find(post.likes.first.user_id) %>
+                        <% user2 = User.find(post.likes.second.user_id) %>
+                        <strong>
+                          <%= link_to "#{user1.first_name} #{user1.last_name}", user1.profile, class: "user-name" %>,
+                          <%= link_to "#{user2.first_name} #{user2.last_name}", user2.profile, class: "user-name" %>
+                            <%= "and " + pluralize(post.likes.count - 2, "other") %>
+                        </strong>
+                      <% end %>
+
+                    </div>
+
+                  <% end %>
+
+                  <% if post.comments.count > 0 %>
+                  <div class="all_comments">
+                    <% post.comments.each do |comment| %>
+                      <div class="comment_wrap">
+
+                          <div class="commenter">
+                            <% user = User.find(comment.user_id) %>
+                            <%= link_to(user.profile) do %>
+                              <%= image_tag user.profile, class: 'tac-image comment-image' %>
+                            <% end %>
+                              <span class="comment-content">
+                                <strong><%= link_to "#{user.first_name} #{user.last_name}", user.profile, class: "user-name" %></strong>
+                              </span>
+                          </div>
+
+                          <div class="commenter_con">
+                              <%= comment.content %>
+                          </div>
+
+                          <div class="comment_actions">
+                            <% if current_user.id == comment.user_id %>
+                              <span class="edit-delete-comment">
+                                <%= link_to 'Edit', edit_comment_path(comment) %>
+                                <%= link_to 'Delete', comment, method: :delete, data: {confirm: "Are you sure?"} %>
+                              </span>
+                            <% end %>
+                          </div>          
+                      </div>
+                    <% end %>
+                    
+                  </div>
+                  <% end %>
+                  <div class="newcomment">
+                    <%= form_for(@comment) do |f| %>
+                      <%= f.text_area :content, class: "comment-field", placeholder: "Write a comment...", rows: "1" %>
+                      <%= f.hidden_field :post_id, value: post.id %>
+                      <%= f.submit "Comment" %>
+                    <% end %>
+                </div>
+              </div>
+          <% end %>
+
+
+    </div>
+
+
+    <%= link_to_previous_page @posts, 'Previous Page', class: "previous-page" %>
+    <%= link_to_next_page @posts, 'Next Page', class: "next-page" %>
+
+
+  </div>
